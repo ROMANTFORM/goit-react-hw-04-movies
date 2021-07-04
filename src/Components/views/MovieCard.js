@@ -36,10 +36,11 @@ class MovieCard extends Component{
 
     handleGoBack = () => {
         const { location, history } = this.props;
+        
         if (location.state && location.state.from) {
             return history.push(location.state.from)
         }
-        history.push(routes.home);
+        history.push(routes.home)
 
         // history.push(location?.state?.from || routes.home)  это новый синтаксис, но он пока очень утяжеляет приложение
 
@@ -50,8 +51,6 @@ class MovieCard extends Component{
 
     render() {
         const { imageLink, title, backdrop_path, overview, genres } = this.state;
-        // console.log(location.state);
-        // console.log(this.props.match.url);
 
         return (
             <div className="Movie-card-container">
@@ -79,10 +78,16 @@ class MovieCard extends Component{
                 <div className="additional">
                     <ul>
                         <li >
-                            <Link to={`${this.props.match.url}/cast`}>Cast</Link> 
+                            <Link to={{
+                                pathname: `${this.props.match.url}/cast`,
+                                state: this.props.location.state
+                            }}>Cast</Link>
                         </li>
                         <li >
-                            <Link to={`${this.props.match.url}/review`}>Reviews</Link> 
+                            <Link to={{
+                                pathname: `${this.props.match.url}/review`,
+                                state: this.props.location.state
+                            }}>Reviews</Link> 
                         </li>
                     </ul>
                     <Route path="/movie/:movieId/cast" component={Cast}/>

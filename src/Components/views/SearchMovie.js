@@ -1,13 +1,9 @@
 import React, { Component } from 'react';
 import { ReactComponent as IconSearch } from '../../icons/icon-search.svg';
-import Axios from 'axios';
+import Axios from '../../utils/axios';
 import { Link } from 'react-router-dom';
 
 import LoadMoreBtn from '../LoadMoreBtn/LoadMoreBtn';
-
-
-const KEY = '2f914b341fe5d8616a45b71c9d9cbdee';
-const BASE_URL = 'https://api.themoviedb.org';
 
 class SearchMovie extends Component{
     state = {
@@ -16,40 +12,66 @@ class SearchMovie extends Component{
         page: 1
     };
 
-    showState = (e) => {
-        e.preventDefault();
-        console.log(this.state.inputValue);
-        this.componentDidMount();
-    }
-    async componentDidMount() {
-        const response = await Axios.get(
-            `${BASE_URL}/3/search/movie?api_key=${KEY}&language=en-US&page=${this.state.page}&query=${this.state.inputValue}`
-        )
-            
-        this.setState({ data: [...response.data.results] });
-        // console.log(response.data.results)
+   async componentDidMount() {
+        const search = this.props.location.search
+        const params = new URLSearchParams(search);
+
+
+        if (params.has('query')) {
+            const locationQuery = params.get('query');
+            const data = await this.makeRequest(this.state.page, locationQuery)
+        
+            this.setState({ data : data.results}) ;
+       }
+       
+
     };
 
+    makeRequest = async (page, value) => {
+        const params = new URLSearchParams({
+            page: page,
+            query: value,
+            language: "en-US"
+        });
+
+        const response = await Axios.get(
+            `search/movie?${params.toString()}`
+        );
+
+        return response.data;
+    };
+
+    showState = async (e) => {
+        e.preventDefault();
+
+        this.props.history.push({
+            search: `?query=${this.state.inputValue} `
+        });
+
+        const data = await this.makeRequest(this.state.page, this.state.inputValue)
+        console.log(data)
+        this.setState({ data : data.results}) ;  
+    };
+
+  
     handleChange = evt => {
     this.setState({ inputValue: evt.target.value })
     // console.log(evt.target.value)
     };
     
-    handleLoadMore = () => {
-        Axios.get(
-    `${BASE_URL}/3/search/movie?api_key=${KEY}&language=en-US&page=${this.state.page += 1}&query=${this.state.inputValue}`
-        )
-        .then(res => this.setState(({ data }) => ({ data: [...data, ...res.data.results] })))
-        .catch(error => console.log(error))
+    handleLoadMore = async () => {
+        const requestData = await this.makeRequest(this.state.page + 1, this.state.inputValue);
+        this.setState(({data}) => ({data: [...data, ...requestData.results]}))
     };
 
     render() {
-        console.log(this.props.location.pathname)
+        // console.log(this.props.location.pathname)
         const { data } = this.state;
+        
         return (
             <>
-            <h2>Search Movie@</h2>
-            <header className="Searchbar">
+                <h2>Search Movie@</h2>
+                <header className="Searchbar">
                     <form className="SearchForm">
                         <button
                             type="submit"
@@ -71,13 +93,18 @@ class SearchMovie extends Component{
                         />
                     </form>
                 </header>
-
+                
                 <ul className="Gallery">
                     {data.map(movie => (
                         <li key={movie.id}>
                             <Link to={{
                                 pathname: `/movie/${movie.id}`,
-                                state: {from: this.props.location.pathname}
+                                state: {
+                                    from: {
+                                        search: this.props.location.search,
+                                        pathname: this.props.location.pathname
+                                    }
+                                }
                             }}>
                                 {movie.title}
                                 <img className="Search-card__img" src={`https://image.tmdb.org/t/p/w500${movie.backdrop_path}`} alt={movie.title }/>
@@ -87,7 +114,7 @@ class SearchMovie extends Component{
                 </ul>
 
                 {this.state.data.length !== 0 && <LoadMoreBtn onClick={this.handleLoadMore }/>}
-                </>
+            </>
         ) 
     };
 };

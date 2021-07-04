@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
+
 import Axios from 'axios';
 import MovieList from '../MovieList/MovieList';
 import LoadMoreBtn from '../LoadMoreBtn/LoadMoreBtn';
